@@ -1,0 +1,113 @@
+---
+title: "TKL SPecial Issue Video Analytics"
+author: "Anonymous"
+date: "1/17/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r loadPackages, echo=F, warning=F}
+library(usethis) 
+#usethis::edit_r_environ()
+
+library(readr)
+library(data.table)
+library(ggplot2)
+library(lubridate)
+library(dplyr)
+library(cluster)
+library(purrr)
+```
+
+
+
+# YouTube German Education Channels Analysis 2022
+
+
+```{r merge data, echo=F, warning=T}
+d1 <- read_delim(file = 'ytChannelVideosEN-11.csv',
+                  skip=0,
+                  delim = ";",
+                  quote = "",
+                 escape_backslash=T,
+                 trim_ws = TRUE,
+                 col_types = "cccccddccc",
+                 col_names = c(
+                    'channelId',
+                    'channelTitle', 
+                    'videoId', 
+                    'videoTitle', 
+                    'uploadDate', 
+                    'video_length', 
+                    'viewCount', 
+                    'rating', 
+                    'categories', 
+                    'tags'
+                    ),
+                  locale = locale(encoding = "UTF-8"))
+problems()
+nrow(d1)
+
+d2 <- read_delim(file = 'ytChannelVideosEN-20.csv',
+                 skip=0,
+                 delim = ";",
+                 quote = "",
+                 trim_ws = TRUE,
+                 escape_backslash=T,
+                 col_types = "cccccddccc",
+                 col_names = c(
+                    'channelId',
+                    'channelTitle', 
+                    'videoId', 
+                    'videoTitle', 
+                    'uploadDate', 
+                    'video_length', 
+                    'viewCount', 
+                    'rating', 
+                    'categories', 
+                    'tags'
+                    ),
+                 locale = locale(encoding = "UTF-8"))
+
+problems()
+nrow(d2)
+
+d <- rbind(d1, d2)
+
+# remove duplicates
+d <- d %>% distinct(videoId, .keep_all = TRUE)
+
+# writ to one file
+write.table('ytChannelVideosEN-TKL.csv', x = d, row.names = FALSE, sep=";")
+
+
+de <- read_delim(file = 'ytChannelVideosDE.csv',
+                 skip=0,
+                 delim = ";",
+                 quote = "",
+                 trim_ws = TRUE,
+                 escape_backslash=T,
+                 col_types = "cccccddccc",
+                 col_names = c(
+                    'channelId',
+                    'channelTitle', 
+                    'videoId', 
+                    'videoTitle', 
+                    'uploadDate', 
+                    'video_length', 
+                    'viewCount', 
+                    'rating', 
+                    'categories', 
+                    'tags'
+                    ),
+                 locale = locale(encoding = "UTF-8"))
+problems()
+nrow(de)
+write.table('ytChannelVideosDE-TKL.csv', x = de, row.names = FALSE, sep=";")
+
+```
