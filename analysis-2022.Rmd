@@ -1,0 +1,547 @@
+---
+title: "TKL SPecial Issue Video Analytics"
+author: "Anonymous"
+date: "1/17/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r loadPackages, echo=F, warning=F}
+library(usethis) 
+#usethis::edit_r_environ()
+
+library(readr)
+library(data.table)
+library(ggplot2)
+library(lubridate)
+library(dplyr)
+library(cluster)
+library(purrr)
+```
+
+
+
+# YouTube German Education Channels Analysis 2022
+
+
+```{r merge data, echo=F, warning=T}
+d1 <- read_delim(file = 'ytChannelVideosEN-11.csv',
+                  skip=0,
+                  delim = ";",
+                  quote = "",
+                 escape_backslash=T,
+                 trim_ws = TRUE,
+                 col_types = "cccccddccc",
+                 col_names = c(
+                    'channelId',
+                    'channelTitle', 
+                    'videoId', 
+                    'videoTitle', 
+                    'uploadDate', 
+                    'video_length', 
+                    'viewCount', 
+                    'rating', 
+                    'categories', 
+                    'tags'
+                    ),
+                  locale = locale(encoding = "UTF-8"))
+problems()
+nrow(d1)
+
+d2 <- read_delim(file = 'ytChannelVideosEN-20.csv',
+                 skip=0,
+                 delim = ";",
+                 quote = "",
+                 trim_ws = TRUE,
+                 escape_backslash=T,
+                 col_types = "cccccddccc",
+                 col_names = c(
+                    'channelId',
+                    'channelTitle', 
+                    'videoId', 
+                    'videoTitle', 
+                    'uploadDate', 
+                    'video_length', 
+                    'viewCount', 
+                    'rating', 
+                    'categories', 
+                    'tags'
+                    ),
+                 locale = locale(encoding = "UTF-8"))
+
+problems()
+nrow(d2)
+
+d <- rbind(d1, d2)
+
+# remove duplicates
+d <- d %>% distinct(videoId, .keep_all = TRUE)
+
+# writ to one file
+write.table('ytChannelVideosEN-TKL.csv', x = d, row.names = FALSE, sep=";")
+
+
+de <- read_delim(file = 'ytChannelVideosDE.csv',
+                 skip=0,
+                 delim = ";",
+                 quote = "",
+                 trim_ws = TRUE,
+                 escape_backslash=T,
+                 col_types = "cccccddccc",
+                 col_names = c(
+                    'channelId',
+                    'channelTitle', 
+                    'videoId', 
+                    'videoTitle', 
+                    'uploadDate', 
+                    'video_length', 
+                    'viewCount', 
+                    'rating', 
+                    'categories', 
+                    'tags'
+                    ),
+                 locale = locale(encoding = "UTF-8"))
+problems()
+nrow(de)
+write.table('ytChannelVideosDE-TKL.csv', x = de, row.names = FALSE, sep=";")
+
+```
+# Start
+
+```{r load-data, echo=F, warning=F}
+
+# 1. set language
+#ds.name <- 'DE'
+ds.name <- 'EN'
+
+# 2. load data from file
+df <- read.csv(paste0('ytChannelVideos', ds.name, '-TKL.csv'), sep=';', header=T)
+
+# 3. set column names
+colnames(df) <- c(
+  'channelId',
+  'channelTitle', 
+  'videoId', 
+  'videoTitle', 
+  'uploadDate', 
+  'video_length', 
+  'viewCount', 
+  'rating', 
+  'categories', 
+  'tags'
+  )
+
+# 4. enrich columns
+yt.complete <- df %>%
+  mutate(uploadDate = as.Date(as.character(uploadDate), format="%Y%m%d")) %>%
+  filter(!is.na(video_length)) %>%
+  filter(video_length > 0) %>%
+  mutate(year = floor_date(uploadDate, "1 year")) %>%
+  mutate(month = floor_date(uploadDate, "1 mont"))
+
+
+```
+
+
+```{r remove-outlier, echo=F, warning=F}
+
+# Outlier detection and removal
+upperOuliertTreshhold <- mean(yt.complete$video_length) + 3*sqrt(var(yt.complete$video_length))
+
+lowerOuliertTreshhold <- 10 # 10 Seconds
+
+noc <- nrow(yt.complete)
+
+yt.complete$video_length <- as.numeric(yt.complete$video_length)
+
+yt.complete <- yt.complete %>%
+  dplyr::filter(
+    video_length < upperOuliertTreshhold, 
+    video_length > lowerOuliertTreshhold)
+
+numberOfOutlier <- noc - nrow(yt.complete)
+
+
+```
+**Overview of the dataset**
+
+Total number of video: `r length(unique(yt.complete$videoId))` 
+
+`r numberOfOutlier` removed outlier (length < `r lowerOuliertTreshhold` and length > `r upperOuliertTreshhold` seconds) 
+
+Columns: `r names(yt.complete)`
+
+**Video length**
+
+* Minimum: `r min(yt.complete$video_length)`s
+* Max: `r max(yt.complete$video_length)`s
+* Mean: `r mean(yt.complete$video_length)`s
+* SD: `r sd(yt.complete$video_length)`s
+
+**Channel**
+`r length(unique(yt.complete$channelId)) `
+
+
+**Video categories**
+Videos have been assigned to multiple categories: 
+
+`r table(df$categories)`
+
+
+```{r, eval=F}
+length(unique(yt.complete$channelId)) / 47021
+length(unique(yt.complete$videoId)) / 18896413
+min(yt.complete$video_lengt)
+max(yt.complete$video_length)
+mean(yt.complete$video_length)
+sd(yt.complete$video_length)
+```
+
+
+```{r channel, echo=F, warning=F}
+
+# Overview of the channels
+channels <- read.csv("ytChannelsEN-TKL.csv", sep=";")
+
+channels %>% summarise(
+  channels = n_distinct(url),
+  categories = n_distinct(categories),
+  languages = n_distinct(language),
+  countries = n_distinct(country),
+  subscribers=sum(subscribers),
+  views=sum(views),
+  videos=sum(videos)
+  ) 
+
+```
+
+
+
+## Visualizations
+```{r descriptiveVisualization}
+ggplot(yt.complete %>% 
+         group_by(channelId) %>% 
+         mutate(video_count = n()), 
+       aes(x=video_count)) +
+geom_histogram(bins = 30) +
+  theme_minimal()
+
+
+ggplot(yt.complete %>% 
+         group_by(channelId) %>% 
+         mutate(video_count = n(), view_sum = sum(viewCount)), 
+       aes(x=video_count, y=view_sum)) +
+geom_point(alpha=0.2, size=0.2) +
+  theme_minimal()
+
+
+```
+
+
+```{r descriptiveVisualization}
+p1 <- ggplot(yt.complete, aes(x=year)) + 
+  geom_histogram(bins = 15) +
+  theme_minimal()
+p1
+ggsave(
+  paste0('output/yt-hist-upload','-',ds.name,'.pdf'), 
+  p1, width = 6, height = 4, units = "in", dpi=600)
+
+
+p2 <- ggplot(yt.complete, aes(x=video_length/60)) + 
+  geom_histogram(bins = 30) +
+  ylim(0, 47000) +
+  theme_minimal() +
+  labs(x="video length (min)", y='count')
+p2
+ggsave(
+  paste0('output/yt-hist-length','-',ds.name,'.pdf'), 
+  p2, width = 6, height = 4, units = "in", dpi=600)
+
+p3 <- ggplot(yt.complete %>% filter(viewCount>0), aes(x=video_length/60, y=viewCount/1000)) + 
+  geom_point(size=0.4, alpha=0.1) +
+  #geom_smooth(method='lm', formula= y~x) +
+  theme_minimal() +
+  labs(x="video length (min)", y='thousand views')
+p3
+ggsave(
+  paste0('output/yt-views-length','-',ds.name,'.pdf'), 
+  p3, width = 6, height = 4, units = "in", dpi=600)
+
+
+p4 <- ggplot(yt.complete, aes(x=video_length/60)) + 
+  geom_histogram(bins = 15, aes(y=..density..), colour="black", fill="white") +
+  geom_density(alpha=.2,color="darkblue", fill="lightblue") +
+  theme_minimal() +
+  labs(x="video length (min)", y='density')
+p4
+ggsave(
+  paste0('output/yt-hist-density-length','-',ds.name,'.pdf'), 
+  p4, width = 6, height = 4, units = "in", dpi=600)
+
+
+```
+
+
+```{r}
+
+```
+
+
+
+
+
+
+### Cluster analysis
+```{r}
+# reduce the data set for the cluster analysis
+x <- yt.complete %>% 
+  select(video_length) %>% 
+  filter(!is.na(video_length))
+
+```
+
+
+**Determin number of clusters: Elbow method**
+```{r}
+# Elbow method for large datasets
+# see: https://stackoverflow.com/questions/21382681/kmeans-quick-transfer-stage-steps-exceeded-maximum
+wss <- function(k) {
+  kmeans(x, k, nstart = 10, iter.max=1000, algorithm="MacQueen")$tot.withinss 
+  # algorithm="Lloyd"
+}
+k.values <- 1:15
+wss_values <- map_dbl(k.values, wss)
+
+plot(k.values, wss_values,
+       type="b", pch = 19, frame = FALSE, 
+       xlab="Number of clusters K",
+       ylab="Total within-clusters sum of squares"
+     )
+```
+
+
+```{r}
+# Average silhouette method => 3
+# Error: cannot allocate vector of size 26.6 Gb
+# Distance vector is too large
+library(purrr)
+library(cluster)
+
+avg_sil <- function(k) {
+  km.res <- kmeans(x, centers = k, nstart = 5, iter.max=100, algorithm="MacQueen")
+  ss <- silhouette(km.res$cluster, dist(x))
+  mean(ss[, 3])
+}
+k.values <- 2:5
+avg_sil_values <- map_dbl(k.values, avg_sil)
+
+plot(k.values, avg_sil_values,
+       type = "b", pch = 19, frame = FALSE, 
+       xlab = "Number of clusters K",
+       ylab = "Average Silhouettes")
+```
+
+
+
+
+**Run the kmeans clusterin**
+```{r}
+cl <- kmeans(x, 3, nstart=100, iter.max=1000, algorithm="MacQueen")
+centers=as.data.frame(cl$centers)
+x$cluster<-factor(cl$cluster)
+
+# Overview of the clusters
+summary(cl)
+data.frame(size=cl$size, centers=cl$centers)
+```
+Cluster centers
+
+
+
+```{r}
+
+
+# 1. map cluster numbers
+if(ds.name=="EN"){
+  x$cluster2 <- ifelse(x$cluster == 1, 3,
+                     ifelse(x$cluster == 2, 1,
+                            ifelse(x$cluster == 3, 2, x$cluster)))
+}
+
+if(ds.name=="DE"){
+  x$cluster2 <- ifelse(x$cluster == 1, 2,
+                     ifelse(x$cluster == 2, 1,
+                            ifelse(x$cluster == 3, 3, x$cluster)))
+}
+
+# Plot histogramm of video length and color-code the clusters
+x$cluster2 <- as.factor(x$cluster2)
+yt.hist.cl <-ggplot(x, aes(x=video_length, fill=cluster2)) +
+  geom_histogram(bins = 300) +
+  scale_x_continuous(labels=function(x) round(x/60,1), n.breaks=10, trans="log2") +
+  #scale_fill_discrete(labels=c("1","2","3")) +
+   theme_minimal() +
+  labs(title="", subtitle="", alpha=NULL, fill='Cluster', x="Video length in minutes (log-scale)", y="Number of videos")
+
+ggsave(paste0('output/yt-hist-cluster-',ds.name,'.pdf'),yt.hist.cl,width = 6, height = 4, units = "in", dpi=600)
+
+yt.hist.cl
+
+
+```
+
+
+
+```{r}
+
+c(
+paste("Cluster & Videos & Min & Max & Mean & SD"),
+paste(
+  "Cluster 1",
+  '&',
+  round(length(subset(x,cluster==1)$video_length),0),
+  '&', '&',
+  round(min(subset(x,cluster==1)$video_length)/60, 2),
+  '&',
+  round(max(subset(x,cluster==1)$video_length)/60, 2),
+  '&',
+  round(mean(subset(x,cluster==1)$video_length)/60, 2),
+  '&',
+  round(sd(subset(x,cluster==1)$video_length)/60, 2)
+),
+paste(
+  "Cluster 2", 
+  '&',
+  round(length(subset(x,cluster==2)$video_length), 0),
+  '&', '&',
+  round(min(subset(x,cluster==2)$video_length)/60, 2),
+  '&',
+  round(max(subset(x,cluster==2)$video_length)/60, 2),
+  '&',
+  round(mean(subset(x,cluster==2)$video_length)/60, 2),
+  '&',
+  round(sd(subset(x,cluster==2)$video_length)/60, 2)
+),
+paste(
+  "Cluster 3",
+  '&',
+  round(length(subset(x,cluster==3)$video_length), 0),
+  '&', '&',
+  round(min(subset(x,cluster==3)$video_length)/60, 2),
+  '&',
+  round(max(subset(x,cluster==3)$video_length)/60, 2),
+  '&',
+  round(mean(subset(x,cluster==3)$video_length)/60, 2),
+  '&',
+  round(sd(subset(x,cluster==3)$video_length)/60, 2)
+)
+)
+#summary(subset(x,cluster==1), digits=6)
+
+
+```
+
+
+
+## Detect segmented videos by their title
+```{r}
+
+df.segmentation <- yt.complete %>% dplyr::select(videoTitle, video_length, channelId)
+df.segmentation$cluster<-factor(cl$cluster)
+
+# Regular Expression
+df.segmentation$isSegmented <- grepl("#[0-9]|Folge\\ [0-9]|[0-9]/[0-9]|Nummer\\ [0-9]|Nr.\\ [0-9]|Teil\\ [0-9]|Teil[0-9]|part\\ [0-9]|parts\\ [0-9]|pt\\. [0-9]|Part\\ [0-9]|Parts\\ [0-9]|Pt\\. [0-9]|XXXNUM[0-9]|Period\\ [0-9]|period\\ [0-9]|Ep\\ [0-9]|episode\\ [0-9]|Episode\\ [0-9]|Episode[0-9]|EPISODE\\ [0-9]|Volume\\ [0-9]|volume\\ [0-9]|[0-9]\\/[0-9]|\\([0-9]\\)|Vol.[0-9]|Vol.\\ [0-9]", df.segmentation$videoTitle)
+
+
+if(ds.name=="DE"){
+  rect <- data.frame(xmin=14.20*60, xmax=38.90*60, ymin=-Inf, ymax=Inf)  
+}
+
+if(ds.name=="EN"){
+  rect <- data.frame(xmin=22.63*60, xmax=63.93*60, ymin=-Inf, ymax=Inf)  
+}
+
+yt.histseg <- ggplot(df.segmentation, 
+                     aes(
+                       x=video_length, 
+                       fill=isSegmented, 
+                       #alpha=as.numeric(as.character(cluster))*0.2
+                       )
+                     ) +
+  geom_histogram(bins = 300) +
+  #scale_x_continuous(labels=function(x) round(x/60/60,0), n.breaks=10) +
+  scale_x_continuous(labels=function(x) round(x/60,1), n.breaks=10, trans="log2") +
+   theme_minimal() +
+  geom_rect(data=rect, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),
+      fill="grey30",
+      alpha=0.3,
+      inherit.aes = FALSE) +
+  annotate(geom="text", x=14.20*60+1220, y=295, label=paste0(ds.name,"2"), color="grey10") +
+  labs(title="", subtitle="", alpha=NULL, color='', x="Video length in minutes (log-scale)", y="Number of videos", fill="Segmented")
+
+ggsave(paste0("output/yt-hist-segmented-",ds.name,".pdf"),yt.histseg,width = 6, height = 4, units = "in", dpi=600)
+
+yt.histseg
+
+
+df.segmentation$duration <- df.segmentation$video_length
+df.segmentedOnly <- df.segmentation %>% filter(isSegmented==TRUE)
+
+#df.segmentation %>% filter(isSegmented==F)
+
+```
+
+```{r}
+# Determine the size of the segmented videos in each cluster
+c1seg <- df.segmentation %>% filter(
+  isSegmented==TRUE,
+  cluster==1)
+
+c2seg <- df.segmentation %>% filter(
+  isSegmented==TRUE,
+  cluster==2)
+
+c3seg <- df.segmentation %>% filter(
+  isSegmented==TRUE,
+  cluster==3)
+
+table(df.segmentation$cluster)
+
+nrow(c1seg)
+nrow(c2seg)
+nrow(c3seg)
+
+nrow(c1seg)/df.segmentation %>% filter(cluster==1) %>% count()
+nrow(c2seg)/df.segmentation %>% filter(cluster==2) %>% count()
+nrow(c3seg)/df.segmentation %>% filter(cluster==3) %>% count()
+
+df.segmentation %>% filter(isSegmented==TRUE) %>% count() / df.segmentation %>% count()
+
+length(unique(yt.complete$channelId))
+
+```
+
+
+```{r}
+# Misc
+cor(yt.complete$video_length, yt.complete$viewCount, method = 'pearson' )
+cor(yt.complete$video_length, yt.complete$viewCount, method = 'spearman' )
+cor(yt.complete$video_length, as.numeric(yt.complete$year), method = 'pearson' )
+
+# modal
+median(yt.complete$viewCount)
+max(yt.complete$viewCount)
+
+yt.complete %>% filter(viewCount>1000000) %>% count() / yt.complete %>% count()
+
+
+```
+
+
+
