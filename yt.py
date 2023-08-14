@@ -8,18 +8,19 @@ import time
 from bs4 import BeautifulSoup
 from random import random
 import subprocess
-import youtube_dl
+# import youtube_dl
+import yt_dlp
 import csv
 # from bs4 import BeautifulSoup
 
 class ChannelScraper:
-    
-    def __init__(self):
+
+    def __init__(self, outfile):
         self.channels = []
         self.processedChannels = []
-        self.exportVideoMetadata = open('ytChannelVideosEN.csv', "a")
+        self.exportVideoMetadata = open(outfile, "a") # 'ytChannelVideosEN.csv'
         pass
-        
+
     def downloadSeachResults(self):
         """
         """
@@ -72,7 +73,7 @@ class ChannelScraper:
                 export_file = open(file_name, "w")
                 self.getSearchResults(str(res[0])+'/page:'+str(i), export_file)
                 time.sleep(random() * 1)
-    
+
     """
     """
     def getSearchResults(self, url, export_file):
@@ -81,11 +82,11 @@ class ChannelScraper:
         try:
             data = requests.get(url).text
             export_file.write(data)
-            
+
         except requests.exceptions.RequestException as e:
             print("ERROR! url " + url + "\nError Info:\n")
 
-    
+
     """
     """
     def getChannelURLs(self):
@@ -113,11 +114,11 @@ class ChannelScraper:
         with open(os.path.join(filepath), newline='') as csvfile:
             content = csv.reader(csvfile, delimiter=';', quotechar='"')
             for row in content:
-                self.channels.append(str(row[1]) + '/videos')
+                self.channels.append( 'ytsearch:' + str(row[1]) + '/videos')
             print('Finished loading channels from file')
         pass
-    
-    
+
+
     """
     skip: in case the process has to be restarted, the previously processed channels can be skipped
     """
@@ -129,7 +130,7 @@ class ChannelScraper:
             'quiet': True,
             #'dump_single_json': True, ## UPPER -J
         }
-        
+
         i = 0
         for channel in self.channels:
             i = i + 1
@@ -138,7 +139,7 @@ class ChannelScraper:
             print('\n')
             print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
             print('Process channel ',i,'  ', channel)
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 try:
                     object = ydl.extract_info(channel, download=False)
                     if 'entries' in object:
@@ -148,7 +149,7 @@ class ChannelScraper:
                     else:
                         self.getParam(object, channel)
                 #except youtube_dl.utils.ExtractorError:
-                except youtube_dl.utils.DownloadError:
+                except yt_dlp.utils.DownloadError:
                     pass
 
 
@@ -156,18 +157,18 @@ class ChannelScraper:
     """
     def getParam(self, vid, channel_url):
         if 'categories' in vid and len(vid['categories']) > 0:
-            cat = ",".join(vid['categories']).replace(';', ',') 
-        else: 
+            cat = ",".join(vid['categories']).replace(';', ',')
+        else:
             cat = ''
         if 'tags' in vid and len(vid['tags']) > 0:
-            tags = ",".join(vid['tags']).replace(';', ',') 
-        else: 
+            tags = ",".join(vid['tags']).replace(';', ',')
+        else:
             tags = ''
         if 'channel' in vid:
             channel_name = vid['channel']
         else:
             channel_name = ''
-    
+
         out = [
             channel_url,
             channel_name.replace(';',','),
@@ -182,17 +183,17 @@ class ChannelScraper:
         ]
         print('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',';'.join(map(str, out)))
         self.exportVideoMetadata.write(';'.join(map(str, out))+'\n')
-    
-    
+
+
 if __name__ == "__main__":
-    s = ChannelScraper()
-    
+    s = ChannelScraper(outfile = 'ytChannelVideosEN-20230714.csv')
+
     # Step 1: Collect YouTube channels from https://www.channelcrawler.com/
     ### s.downloadSeachResults()
-    
+
     # Step 2: Collect to channel URLs for each channel collected in step 1
     #s.getChannelURLs()
     s.loadChannelsFromFile('ytChannelsEN.csv')
-    
+
     # Step 3: Collect meta data for each video in the channels collected in step 2
-    s.getChannelVideoData(skip=386)
+    s.getChannelVideoData(skip=0) # 368

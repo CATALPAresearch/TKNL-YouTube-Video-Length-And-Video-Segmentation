@@ -31,7 +31,7 @@ library(purrr)
 ```{r load-data, echo=F, warning=F}
 
 # 1. set language
-#ds.name <- 'DE'
+ds.name <- 'DE'
 ds.name <- 'EN'
 
 # 2. load data from file
@@ -122,7 +122,7 @@ sd(yt.complete$video_length)
 
 # Overview of the channels
 channels <- read.csv("ytChannelsEN-TKL.csv", sep=";")
-
+channels
 channels %>% summarise(
   channels = n_distinct(url),
   categories = n_distinct(categories),
@@ -131,6 +131,18 @@ channels %>% summarise(
   subscribers=sum(subscribers),
   views=sum(views),
   videos=sum(videos)
+  ) 
+
+channelsDE <- read.csv("ytChannelVideosDE-TKL.csv", sep=";")
+channelsDE
+channelsDE %>% summarise(
+  channels = n_distinct(channelTitle),
+  categories = n_distinct(categories),
+  #languages = n_distinct(language),
+  #countries = n_distinct(country),
+  #subscribers=sum(subscribers),
+  views=sum(viewCount),
+  videos=n()
   ) 
 
 ```
@@ -213,7 +225,7 @@ ggsave(
 
 
 ### Cluster analysis
-```{r}
+```{r assignDateForCkustering}
 # reduce the data set for the cluster analysis
 x <- yt.complete %>% 
   select(video_length) %>% 
@@ -223,7 +235,7 @@ x <- yt.complete %>%
 
 
 **Determin number of clusters: Elbow method**
-```{r}
+```{r numberOfClusters}
 # Elbow method for large datasets
 # see: https://stackoverflow.com/questions/21382681/kmeans-quick-transfer-stage-steps-exceeded-maximum
 wss <- function(k) {
@@ -232,13 +244,14 @@ wss <- function(k) {
 }
 k.values <- 1:15
 wss_values <- map_dbl(k.values, wss)
-
 plot(k.values, wss_values,
        type="b", pch = 19, frame = FALSE, 
        xlab="Number of clusters K",
        ylab="Total within-clusters sum of squares"
      )
 ```
+
+
 
 
 ```{r}
@@ -270,6 +283,58 @@ plot(k.values, avg_sil_values,
 cl <- kmeans(x, 3, nstart=100, iter.max=1000, algorithm="MacQueen")
 centers=as.data.frame(cl$centers)
 x$cluster<-factor(cl$cluster)
+
+# Cluster performance
+#library(usethis) 
+#usethis::edit_r_environ()
+
+#install.packages('parallel')
+# FIXME: Takes too much system performance
+#library(parallel)
+#mclapply(c(cl$cluster, dist(x)), silhouette, mc.cores = 6) # detectCores()
+
+library(amap)
+library(cluster)
+library(rgl)
+library(bios2mds)
+sil.score1 <- sil.score(cl$cluster, nb.clus = c(2:4),
+ nb.run = 100, iter.max = 100)
+barplot(sil.score1)
+
+
+#This call would apply the specified function on the provided vector, but utilize all available cores to do so. In order to use this function, you will need to install and load the parallel package, which can be done by:
+
+# Large datasets we need to sample the dataset in order to calculate the silhouette score
+set.seed(7)
+sample_index <- sample(1:nrow(x),50000) 
+sf <- silhouette(cl$cluster[sample_index], dist(x[sample_index,]))
+sf[1,]
+summary(sf)
+# Average silhouette width = distortion score
+mean(sf[,3])
+# 
+
+# Silhouette score
+silhouette_score <- function(k){
+  km <- kmeans(x[sample_index,], centers = k, nstart=25)
+  ss <- silhouette(km$cluster, dist(x[sample_index,]))
+  mean(ss[, 3])
+}
+k <- 2:5
+avg_sil <- sapply(k, silhouette_score)
+plot(k, type='b', avg_sil, xlab='Number of clusters', ylab='Average Silhouette Scores', frame=FALSE)
+
+
+#
+sf.df <- data.frame(cluster=sf[,1], neighbor=sf[,2], sil_width=sf[,3])
+sf.plot <- sf.df %>% 
+  group_by(cluster) %>%
+  mutate(row=row_number()) %>%
+  arrange(cluster, row)
+sf.plot
+ggplot(sf.plot, aes(x=sil_width, y=row, group=cluster, color=factor(cluster))) +
+  geom_bar(stat_identity()) +
+  facet_grid(.~cluster)
 
 # Overview of the clusters
 summary(cl)
