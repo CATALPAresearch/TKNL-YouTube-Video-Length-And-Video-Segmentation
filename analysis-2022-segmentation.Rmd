@@ -1,0 +1,723 @@
+---
+title: "Video Segmantation"
+author: "Niels Seidel"
+date: "May 7, 2020"
+output: pdf_document
+---
+
+```{r loadPackages}
+
+library("dplyr")
+library("ggpubr")
+library("ggplot2")
+
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+
+df <- read.table("data-segmentation.csv", header=T, sep=";",quote='"')
+
+df.complete <- df %>% filter(complete=='1')
+df.complete
+```
+
+## Descriptive Analysis
+
+### Particpants
+Male: N=`r nrow(as.data.frame(subset(df.complete,gender=='male')))`
+Female: N=`r nrow(as.data.frame(subset(df.complete,gender=='female')))`
+
+Documentary: N=`r nrow(as.data.frame(subset(df.complete,type=='D')))`
+Video lecture: N=`r nrow(as.data.frame(subset(df.complete,type=='V')))`
+
+Variant 1: N=`r nrow(as.data.frame(subset(df.complete,variant==1)))`
+Variant 2: N=`r nrow(as.data.frame(subset(df.complete,variant==2)))`
+Variant 3: N=`r nrow(as.data.frame(subset(df.complete,variant==3)))`
+
+**Cross combinations**
+
+Variant 1 - Documentary: N=`r nrow(as.data.frame(subset(df.complete,variant==1 & type=='D')))`
+Variant 2 - Documentary: N=`r nrow(as.data.frame(subset(df.complete,variant==2 & type=='D')))`
+Variant 3 - Documentary: N=`r nrow(as.data.frame(subset(df.complete,variant==3 & type=='D')))`
+
+Variant 1 - Video lecture: N=`r nrow(as.data.frame(subset(df.complete,variant==1 & type=='V')))`
+Variant 2 - Video lecture: N=`r nrow(as.data.frame(subset(df.complete,variant==2 & type=='V')))`
+Variant 3 - Video lecture: N=`r nrow(as.data.frame(subset(df.complete,variant==3 & type=='V')))`
+
+**Age distribution**
+
+`r summary(df.complete$age)`
+
+## Learning gain
+
+Pre-test score: `r summary(df.complete$prescore)`
+
+Post-test score: `r summary(df.complete$postscore)`
+
+Learning gaint (post-test score minus pre-test score): `r summary(df.complete$learninggain)`
+
+
+## Pre-test
+D1
+`r nrow(as.data.frame(subset(df.complete,variant==1 & type=='D')$prescore))`
+`r mean(subset(df.complete,variant==1 & type=='D')$prescore)`
+`r sd(subset(df.complete,variant==1 & type=='D')$prescore)`
+
+D2
+`r nrow(as.data.frame(subset(df.complete,variant==2 & type=='D')$prescore))`
+`r mean(subset(df.complete,variant==2 & type=='D')$prescore)`
+`r sd(subset(df.complete,variant==2 & type=='D')$prescore)`
+
+D3
+`r nrow(as.data.frame(subset(df.complete,variant==3 & type=='D')$prescore))`
+`r mean(subset(df.complete,variant==3 & type=='D')$prescore)`
+`r sd(subset(df.complete,variant==3 & type=='D')$prescore)`
+
+D-all
+`r nrow(as.data.frame(subset(df.complete, type=='D')$prescore))`
+`r mean(subset(df.complete, type=='D')$prescore)`
+`r sd(subset(df.complete, type=='D')$prescore)`
+
+
+L1
+`r nrow(as.data.frame(subset(df.complete,variant==1 & type=='V')$prescore))`
+`r mean(subset(df.complete,variant==1 & type=='V')$prescore)`
+`r sd(subset(df.complete,variant==1 & type=='V')$prescore)`
+
+L2
+`r nrow(as.data.frame(subset(df.complete,variant==2 & type=='V')$prescore))`
+`r mean(subset(df.complete,variant==2 & type=='V')$prescore)`
+`r sd(subset(df.complete,variant==2 & type=='V')$prescore)`
+
+L3
+`r nrow(as.data.frame(subset(df.complete,variant==3 & type=='V')$prescore))`
+`r mean(subset(df.complete,variant==3 & type=='V')$prescore)`
+`r sd(subset(df.complete,variant==3 & type=='V')$prescore)`
+
+D-all
+`r nrow(as.data.frame(subset(df.complete, type=='V')$prescore))`
+`r mean(subset(df.complete, type=='V')$prescore)`
+`r sd(subset(df.complete, type=='V')$prescore)`
+
+
+all-1
+`r nrow(as.data.frame(subset(df.complete,variant==1)$prescore))`
+`r mean(subset(df.complete,variant==1)$prescore)`
+`r sd(subset(df.complete,variant==1)$prescore)`
+
+all-2
+`r nrow(as.data.frame(subset(df.complete,variant==2)$prescore))`
+`r mean(subset(df.complete,variant==2)$prescore)`
+`r sd(subset(df.complete,variant==2)$prescore)`
+
+all-3
+`r nrow(as.data.frame(subset(df.complete,variant==3)$prescore))`
+`r mean(subset(df.complete,variant==3)$prescore)`
+`r sd(subset(df.complete,variant==3)$prescore)`
+
+all
+`r nrow(as.data.frame(subset(df.complete)$prescore))`
+`r mean(subset(df.complete)$prescore)`
+`r sd(subset(df.complete)$prescore)`
+
+
+
+
+## Post-test
+D1
+`r nrow(as.data.frame(subset(df.complete,variant==1 & type=='D')$postscore))`
+`r mean(subset(df.complete,variant==1 & type=='D')$postscore)`
+`r sd(subset(df.complete,variant==1 & type=='D')$postscore)`
+
+D2
+`r nrow(as.data.frame(subset(df.complete,variant==2 & type=='D')$postscore))`
+`r mean(subset(df.complete,variant==2 & type=='D')$postscore)`
+`r sd(subset(df.complete,variant==2 & type=='D')$postscore)`
+
+D3
+`r nrow(as.data.frame(subset(df.complete,variant==3 & type=='D')$postscore))`
+`r mean(subset(df.complete,variant==3 & type=='D')$postscore)`
+`r sd(subset(df.complete,variant==3 & type=='D')$postscore)`
+
+D-all
+`r nrow(as.data.frame(subset(df.complete, type=='D')$postscore))`
+`r mean(subset(df.complete, type=='D')$postscore)`
+`r sd(subset(df.complete, type=='D')$postscore)`
+
+
+L1
+`r nrow(as.data.frame(subset(df.complete,variant==1 & type=='V')$postscore))`
+`r mean(subset(df.complete,variant==1 & type=='V')$postscore)`
+`r sd(subset(df.complete,variant==1 & type=='V')$postscore)`
+
+L2
+`r nrow(as.data.frame(subset(df.complete,variant==2 & type=='V')$postscore))`
+`r mean(subset(df.complete,variant==2 & type=='V')$postscore)`
+`r sd(subset(df.complete,variant==2 & type=='V')$postscore)`
+
+L3
+`r nrow(as.data.frame(subset(df.complete,variant==3 & type=='V')$postscore))`
+`r mean(subset(df.complete,variant==3 & type=='V')$postscore)`
+`r sd(subset(df.complete,variant==3 & type=='V')$postscore)`
+
+D-all
+`r nrow(as.data.frame(subset(df.complete, type=='V')$postscore))`
+`r mean(subset(df.complete, type=='V')$postscore)`
+`r sd(subset(df.complete, type=='V')$postscore)`
+
+
+all-1
+`r nrow(as.data.frame(subset(df.complete,variant==1)$postscore))`
+`r mean(subset(df.complete,variant==1)$postscore)`
+`r sd(subset(df.complete,variant==1)$postscore)`
+
+all-2
+`r nrow(as.data.frame(subset(df.complete,variant==2)$postscore))`
+`r mean(subset(df.complete,variant==2)$postscore)`
+`r sd(subset(df.complete,variant==2)$postscore)`
+
+all-3
+`r nrow(as.data.frame(subset(df.complete,variant==3)$postscore))`
+`r mean(subset(df.complete,variant==3)$postscore)`
+`r sd(subset(df.complete,variant==3)$postscore)`
+
+all
+`r nrow(as.data.frame(subset(df.complete)$postscore))`
+`r mean(subset(df.complete)$postscore)`
+`r sd(subset(df.complete)$postscore)`
+
+
+
+## learning gain
+D1
+`r nrow(as.data.frame(subset(df.complete,variant==1 & type=='D')$learninggain))`
+`r mean(subset(df.complete,variant==1 & type=='D')$learninggain)`
+`r sd(subset(df.complete,variant==1 & type=='D')$learninggain)`
+
+D2
+`r nrow(as.data.frame(subset(df.complete,variant==2 & type=='D')$learninggain))`
+`r mean(subset(df.complete,variant==2 & type=='D')$learninggain)`
+`r sd(subset(df.complete,variant==2 & type=='D')$learninggain)`
+
+D3
+`r nrow(as.data.frame(subset(df.complete,variant==3 & type=='D')$learninggain))`
+`r mean(subset(df.complete,variant==3 & type=='D')$learninggain)`
+`r sd(subset(df.complete,variant==3 & type=='D')$learninggain)`
+
+D-all
+`r nrow(as.data.frame(subset(df.complete, type=='D')$learninggain))`
+`r mean(subset(df.complete, type=='D')$learninggain)`
+`r sd(subset(df.complete, type=='D')$learninggain)`
+
+
+L1
+`r nrow(as.data.frame(subset(df.complete,variant==1 & type=='V')$learninggain))`
+`r mean(subset(df.complete,variant==1 & type=='V')$learninggain)`
+`r sd(subset(df.complete,variant==1 & type=='V')$learninggain)`
+
+L2
+`r nrow(as.data.frame(subset(df.complete,variant==2 & type=='V')$learninggain))`
+`r mean(subset(df.complete,variant==2 & type=='V')$learninggain)`
+`r sd(subset(df.complete,variant==2 & type=='V')$learninggain)`
+
+L3
+`r nrow(as.data.frame(subset(df.complete,variant==3 & type=='V')$learninggain))`
+`r mean(subset(df.complete,variant==3 & type=='V')$learninggain)`
+`r sd(subset(df.complete,variant==3 & type=='V')$learninggain)`
+
+D-all
+`r nrow(as.data.frame(subset(df.complete, type=='V')$learninggain))`
+`r mean(subset(df.complete, type=='V')$learninggain)`
+`r sd(subset(df.complete, type=='V')$learninggain)`
+
+
+all-1
+`r nrow(as.data.frame(subset(df.complete,variant==1)$learninggain))`
+`r mean(subset(df.complete,variant==1)$learninggain)`
+`r sd(subset(df.complete,variant==1)$learninggain)`
+
+all-2
+`r nrow(as.data.frame(subset(df.complete,variant==2)$learninggain))`
+`r mean(subset(df.complete,variant==2)$learninggain)`
+`r sd(subset(df.complete,variant==2)$learninggain)`
+
+all-3
+`r nrow(as.data.frame(subset(df.complete,variant==3)$learninggain))`
+`r mean(subset(df.complete,variant==3)$learninggain)`
+`r sd(subset(df.complete,variant==3)$learninggain)`
+
+all
+`r nrow(as.data.frame(subset(df.complete)$learninggain))`
+`r mean(subset(df.complete)$learninggain)`
+`r sd(subset(df.complete)$learninggain)`
+
+
+
+
+
+## Relative watching time
+
+`r summary(df.complete$relativewatchingtime)`
+
+
+
+```{r}
+
+
+
+
+```
+
+```{r anova}
+# ANOVA by variant
+# See manual instructions at http://www.sthda.com/english/wiki/one-way-anova-test-in-r
+data <- subset(df.complete, variant!=4 & type=="D" )
+data <- df.complete
+# order variants
+data$variant <- factor(data$variant, ordered = TRUE, levels = c(1, 2, 3))
+#d.levels <- levels(data$variant)
+#data$variant <- ordered(data$variant, levels = d.levels)
+data$variant
+
+
+group_by(data, variant) %>%
+  summarise(
+    count = n(),
+    mean = mean(learninggain, na.rm = TRUE),
+    sd = sd(learninggain, na.rm = TRUE)
+  )
+
+#if(!require(devtools)) install.packages("devtools")
+#devtools::install_github("kassambara/ggpubr")
+
+# rstatix broom car
+#update.packages(ggpubr = TRUE, ask = FALSE)	
+#update.packages()
+boxpl <- ggboxplot(data, x = "variant", y = "learninggain", 
+          #color = "type", palette = c("#00AFBB", "#FC4E07"),
+          order = c(1, 2, 3),
+          ylim = c(0, 10),
+          error.plot = "pointrange",
+          bxp.errorbar.width = 0.4,
+          bxp.errorbar = T,
+          ylab = "Learning gain", xlab = "Variant", type="Type of video")
+
+ggsave("europlop2020-boxplot-1-2.pdf",boxpl,width = 6, height = 6, units = "in", dpi=600)
+boxpl
+
+1-5.29/6.63
+```
+
+
+```{r pressure, echo=FALSE}
+
+data$type <- ifelse(data$type=="D",'documentary','lecture')
+
+library("ggpubr")
+plo <- ggline(data, x = "variant", y = "learninggain", 
+       add = c("mean_se", "jitter"), 
+       color = "type", palette = c("#00AFBB", "#FC4E07"),
+       order = c(1, 2, 3),
+       ylim = c(0, 10),
+       ylab = "Learning gain", xlab = "Treatment")
+ggsave("europlop2020-plot-1-2.pdf",plo,width = 6, height = 6, units = "in", dpi=600)
+plo
+```
+
+```{r}
+# TODO:
+# https://rcompanion.org/rcompanion/d_05.html
+library(car)
+leveneTest(learninggain ~ variant, data = data)
+# agricola
+
+res.aov <- aov(learninggain ~ variant, data = data)
+# Summary of the analysis
+summary(res.aov)
+
+```
+
+
+The p-value is 0.0769 
+
+If the ANOVA test is significant, we can compute Tukey HSD (Tukey Honest Significant Differences, R function: TukeyHSD()) for performing multiple pairwise-comparison between the means of groups.
+
+
+```{r}
+
+lm.fit <- lm(learninggain ~ variant, data = data)
+anova(lm.fit)
+
+```
+
+```{r}
+#lm(Y~X,data=DATASETNAME)
+# Tukey multiple pairwise-comparisons
+TukeyHSD(res.aov, conf.level=0.95)
+
+
+16.071/1.7619
+
+```
+
+
+*Intepretation help*
+diff: difference between means of the two groups
+lwr, upr: the lower and the upper end point of the confidence interval at 95% (default)
+p adj: p-value after adjustment for the multiple comparisons. p has to be very small
+
+
+
+```{r eval=F}
+group_by(data, variant) %>%
+  summarise(
+    count = n(),
+    mean = mean(Gut.Strukturiert, na.rm = TRUE),
+    sd = sd(Gut.Strukturiert, na.rm = TRUE)
+  )
+
+boxpl.s <- ggboxplot(data, x = "variant", y = "Gut.Strukturiert", 
+          #color = "variant", palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+          order = c(1, 2, 3),
+          ylim = c(0, 10),
+          error.plot = "pointrange",
+          bxp.errorbar.width = 0.4,
+          bxp.errorbar = T,
+          ylab = "Perceived structuredness", xlab = "Variant")
+
+ggsave("europlop2020-boxplot-structure.pdf",boxpl.s,width = 6, height = 6, units = "in", dpi=600)
+boxpl.s
+```
+
+
+```{r}
+
+# Kruskal Wallis Test One Way Anova by Ranks
+# https://datatab.de/tutorial/kruskal-wallis-test
+data
+
+# all variants
+kruskal.test(
+  learninggain ~ variant, 
+  data = data
+  ) # where y1 is numeric and A is a factor
+
+
+# variant 1 and 2
+kruskal.test(
+  learninggain ~ variant, 
+  data = data %>% filter(variant != 3)
+  ) # where y1 is numeric and A is a factor
+
+# variant 1 and 3
+kruskal.test(
+  learninggain ~ variant, 
+  data = data %>% filter(variant != 2)
+  ) # where y1 is numeric and A is a factor
+
+
+# variant 3 and 2
+kruskal.test(
+  learninggain ~ variant, 
+  data = data %>% filter(variant != 1)
+  ) # where y1 is numeric and A is a factor
+
+
+```
+
+
+
+
+# YouTube Analysis
+```{r}
+yt <- read.table("/home/abb/Documents/proj_001_doc/pub/68-EuroPLoP-VideoSegmentation/data/Maas-all-channel-videos3.csv", header=T, sep=",",quote='"')
+
+yt.complete <- subset(yt, excluded=='0')
+library(lubridate)
+yt.complete$length_min <- hms(yt.complete$length, quiet = F)#, "%H:%M:%S", quiet = F)
+yt.complete$video_length <- as.numeric(yt.complete$length_min, "hours") * 3600 +  as.numeric(yt.complete$length_min, "minutes") * 60 + as.numeric(yt.complete$length_min, "seconds")
+yt.complete$length
+
+yt.complete$video_length <- as.numeric(as.character(strsplit(yt.complete$length),':')[1])*60 + as.numeric(str_replace(strsplit(as.character(yt.complete$length),':')[2],',','.'))
+
+yt.complete$tmp_minutes <- strsplit(as.character(yt.complete$length),":")[1]
+yt.complete$tmp_seconds <- strsplit(as.character(yt.complete$length),":")[2]
+yt.complete$tmp_seconds <- gsub(',','.',yt.complete$tmp_seconds)
+yt.complete$tmp_seconds
+yt.complete$length_minutes <- as.numeric(yt.complete$length_min, 'minutes')
+#yt.complete$length_minutes
+
+yt.complete$tmp_minutes <- gsub(":.+$", "", yt.complete$length)
+yt.complete$tmp_seconds <- gsub("^.+:", "", yt.complete$length)
+yt.complete$tmp_seconds <- as.character(gsub(",", ".", yt.complete$tmp_seconds))
+yt.complete$tmp_length <- 
+  as.numeric(yt.complete$tmp_minutes)*60 + as.numeric(yt.complete$tmp_seconds)
+yt.complete$video_length <- yt.complete$tmp_length
+
+yt.hist <- ggplot(yt.complete, aes(x=video_length)) +
+  geom_histogram(bins = 300) +
+  scale_x_continuous(labels=function(x) round(x/60,0), n.breaks=10) +
+   theme_minimal() +
+  labs(title="", subtitle="", alpha=NULL, color='', x="Video length in minutes", y="Number of videos")
+ggsave("yt-hist.pdf",yt.hist,width = 6, height = 4, units = "in", dpi=600)
+yt.hist
+ 
+```
+
+
+Minimum: `r min(yt.complete$video_length)`
+Max: `r max(yt.complete$video_length)`
+
+### Cluster analysis
+```{r}
+# Siehe https://www.datanovia.com/en/lessons/determining-the-optimal-number-of-clusters-3-must-know-methods/
+
+# reduce the data set for the cluster analysis
+x <- yt.complete %>% select(video_length)
+```
+**Determin number of clusters: Elbow method**
+```{r}
+# Elbow method
+wss <- function(k) {
+  kmeans(x, k, nstart = 10 )$tot.withinss
+}
+k.values <- 1:15
+library(purrr)
+wss_values <- map_dbl(k.values, wss)
+plot(k.values, wss_values,
+       type="b", pch = 19, frame = FALSE, 
+       xlab="Number of clusters K",
+       ylab="Total within-clusters sum of squares"
+     )
+```
+
+
+```{r}
+# Average silhouette method => 3
+library(cluster)
+avg_sil <- function(k) {
+  km.res <- kmeans(x, centers = k, nstart = 25)
+  ss <- silhouette(km.res$cluster, dist(x))
+  mean(ss[, 3])
+}
+k.values <- 2:15
+avg_sil_values <- map_dbl(k.values, avg_sil)
+
+plot(k.values, avg_sil_values,
+       type = "b", pch = 19, frame = FALSE, 
+       xlab = "Number of clusters K",
+       ylab = "Average Silhouettes")
+```
+
+**Run the kmeans clusterin**
+```{r}
+cl <- kmeans(x, 3, nstart=100)
+centers=as.data.frame(cl$centers)
+x$cluster<-factor(cl$cluster)
+summary(cl)
+```
+Cluster centers
+```{r}
+cl$centers
+```
+Cluster sizes
+```{r}
+cl$size
+```
+
+```{r}
+yt.hist.cl <-ggplot(x, aes(x=video_length, fill=cluster)) +
+  geom_histogram(bins = 300) +
+  scale_x_continuous(labels=function(x) round(x/60,1), n.breaks=10, trans="log2") +
+   theme_minimal() +
+  labs(title="", subtitle="", alpha=NULL, color='', x="Video length in minutes (log-scale)", y="Number of videos")
+ggsave("yt-hist-cl.pdf",yt.hist.cl,width = 6, height = 4, units = "in", dpi=600)
+yt.hist.cl
+650.92/60
+```
+
+Cluster 1 
+M=`r mean(subset(x,cluster==1)$video_length)/60`
+SD=`r sd(subset(x,cluster==1)$video_length)/60`
+
+Cluster 2
+M=`r mean(subset(x,cluster==2)$video_length)/60`
+SD=`r sd(subset(x,cluster==2)$video_length)/60`
+
+Cluster 3
+M=`r mean(subset(x,cluster==3)$video_length)/60`
+SD=`r sd(subset(x,cluster==3)$video_length)/60`
+
+```{r}
+summary(subset(x,cluster==3), digits=6)
+```
+
+
+## Video titles
+```{r}
+
+library(tidyverse)
+pattern <- 'part|parts|Part|Parts||Pt.|pt.|XXXNUM|Period | period |Ep|episode|Episode|Volume|volume'
+
+yt.complete$pp <- yt.complete$name
+yt.segmented <- dplyr::filter(yt.complete, grepl("part\\ [0-9]|parts\\ [0-9]|pt\\. [0-9]|Part\\ [0-9]|Parts\\ [0-9]|Pt\\. [0-9]|XXXNUM[0-9]|Period\\ [0-9]|period\\ [0-9]|Ep\\ [0-9]|episode\\ [0-9]|Episode\\ [0-9]|Volume\\ [0-9]|volume\\ [0-9]|[0-9]\\/[0-9]", pp))
+
+
+
+# dplyr::filter(yt.complete, grepl('', pp))
+
+
+yt.histseg <- ggplot(yt.segmented, aes(x=video_length)) +
+  geom_histogram(bins = 300) +
+  scale_x_continuous(labels=function(x) round(x/60,0), n.breaks=10) +
+   theme_minimal() +
+  labs(title="", subtitle="", alpha=NULL, color='', x="Video length in minutes", y="Number of videos")
+#ggsave("yt-hist.pdf",yt.hist,width = 6, height = 4, units = "in", dpi=600)
+yt.histseg
+
+```
+
+
+```{r}
+
+
+
+
+
+```
+
+
+
+```{r}
+
+yt.complete$isSegmented <- grepl("part\\ [0-9]|parts\\ [0-9]|pt\\. [0-9]|Part\\ [0-9]|Parts\\ [0-9]|Pt\\. [0-9]|XXXNUM[0-9]|Period\\ [0-9]|period\\ [0-9]|Ep\\ [0-9]|episode\\ [0-9]|Episode\\ [0-9]|Volume\\ [0-9]|volume\\ [0-9]|[0-9]\\/[0-9]", yt.complete$name)
+
+
+rect <- data.frame(xmin=452, xmax=1155, ymin=-Inf, ymax=Inf)
+
+yt.histseg <- ggplot(yt.complete, aes(x=video_length, fill=isSegmented)) +
+  geom_histogram(bins = 300) +
+  #scale_x_continuous(labels=function(x) round(x/60/60,0), n.breaks=10) +
+  scale_x_continuous(labels=function(x) round(x/60,1), n.breaks=10, trans="log2") +
+   theme_minimal() +
+  geom_rect(data=rect, aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),
+      fill="grey30",
+      alpha=0.3,
+      inherit.aes = FALSE) +
+  annotate(geom="text", x=700, y=95, label="Cluster 2", color="grey10") +
+  labs(title="", subtitle="", alpha=NULL, color='', x="Video length in minutes (log-scale)", y="Number of videos", fill="Segmented")
+ggsave("yt-hist-segmented.pdf",yt.histseg,width = 6, height = 4, units = "in", dpi=600)
+yt.histseg
+
+
+```
+
+
+
+Number of segmented videos
+`r nrow(yt.segmented)`
+
+Mean length of segmented videos
+`r mean(yt.segmented$video_length)`
+
+
+Number of segmented videos that are assigned to cluster 1: 
+`r nrow(yt.segmented %>% filter(video_length %in% (1155:3000000)))`
+Share of segmented videos in cluster 1
+`r nrow(yt.segmented %>% filter(video_length %in% (1155:3000000))) /  nrow(yt.segmented)` 
+
+Number of segmented videos that are assigned to cluster 2: 
+`r nrow(yt.segmented %>% filter(video_length %in% (452:1155)))`
+Share of segmented videos in cluster 2
+`r nrow(yt.segmented %>% filter(video_length %in% (452:1155))) /  nrow(yt.segmented) `
+
+Number of segmented videos that are assigned to cluster 3: 
+`r nrow(yt.segmented %>% filter(video_length %in% (0:451)))`
+Share of segmented videos in cluster 3
+`r nrow(yt.segmented %>% filter(video_length %in% (0:451))) /  nrow(yt.segmented) `
+
+
+### clustering of segmented videos
+```{r}
+z<-yt.segmented %>% select(video_length)
+cl.seg <- kmeans(z, 3, nstart=100)
+centers=as.data.frame(cl.seg$centers)
+y$cluster<-factor(cl.seg$cluster)
+
+library(cluster)
+avg_sil <- function(k) {
+  km.res <- kmeans(z, centers = k, nstart = 25)
+  ss <- silhouette(km.res$cluster, dist(z))
+  mean(ss[, 3])
+}
+k.values <- 2:15
+avg_sil_values <- map_dbl(k.values, avg_sil)
+
+plot(k.values, avg_sil_values,
+       type = "b", pch = 19, frame = FALSE, 
+       xlab = "Number of clusters K",
+       ylab = "Average Silhouettes")
+
+```
+
+```{r}
+
+
+cl <- kmeans(z, 3, nstart=100)
+centers=as.data.frame(cl$centers)
+z$cluster<-factor(cl$cluster)
+summary(cl)
+
+yt.histseg <- ggplot(z, aes(x=video_length, fill=cluster)) +
+  geom_histogram(bins = 300) +
+  scale_x_continuous(labels=function(x) round(x/60,0), n.breaks=10) +
+   theme_minimal() +
+  labs(title="", subtitle="", alpha=NULL, color='', x="Video length in minutes", y="Number of videos")
+#ggsave("yt-hist-segmented.pdf",yt.hist,width = 6, height = 4, units = "in", dpi=600)
+yt.histseg
+
+```
+
+```{r}
+
+ 
+# views, likes, comments
+nrow(as.data.frame(yt.complete))
+ggplot(yt.complete, aes(x=views, y=comments)) +
+  geom_point() +
+  #scale_x_continuous(labels=function(x) round(x/3600,0), n.breaks=10) +
+   theme_minimal() +
+  labs(title="", subtitle="", alpha=NULL, color='', x="Minutes", y="Number of videos")
+```
+
+
+```{r}
+
+#Anova
+
+groupmeans <- c(550, 598, 598, 646)
+
+p <- power.anova.test(groups = length(groupmeans), 
+between.var = var(groupmeans), within.var = 6400, 
+power=0.823,sig.level=0.05,n=NULL)
+p
+
+
+data(mtcars)
+
+# Create two groups based on the number of cylinders (4 or 6)
+variant1 <- df.complete %>% filter(variant == 1) %>% select(learninggain)
+variant2 <- df.complete %>% filter(variant == 2) %>% select(learninggain)
+variant3 <- df.complete %>% filter(variant == 3) %>% select(learninggain)
+
+# Perform the t-test
+t.test(group1, group2)
+t.test(variant1, variant3)
+t.test(variant1, variant2)
+
+df.complete
+
+```
+
