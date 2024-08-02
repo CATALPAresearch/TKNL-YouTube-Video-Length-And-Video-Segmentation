@@ -11,10 +11,10 @@
 * https://github.com/ytdl-org/youtube-dl
 * https://www.channelcrawler.com
 
-YT API Key: AIzaSyDZpdjgr3VgTULJgEhopIT2-jVU_paIe-M
+
 
 curl \
-  'https://youtube.googleapis.com/youtube/v3/videoCategories?part=snippet&hl=es&regionCode=ES&key=AIzaSyDZpdjgr3VgTULJgEhopIT2-jVU_paIe-M' \
+  'https://youtube.googleapis.com/youtube/v3/videoCategories?part=snippet&hl=es&regionCode=ES&key=xxxx' \
   --header 'Authorization: Bearer [YOUR_ACCESS_TOKEN]' \
   --header 'Accept: application/json' \
   --compressed
