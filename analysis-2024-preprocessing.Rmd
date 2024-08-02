@@ -1,6 +1,6 @@
 ---
 title: "TKL SPecial Issue Video Analytics"
-author: "Anonymous"
+author: "Niels Seidel"
 date: "1/17/2022"
 output: pdf_document
 ---

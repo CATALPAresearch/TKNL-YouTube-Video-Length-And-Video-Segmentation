@@ -1,7 +1,7 @@
 ---
-title: "TKNL Special Issue Video Analytics"
-author: "Niels Seidel"
-date: "5/13/2024"
+title: "TKL SPecial Issue Video Analytics"
+author: "Anonymous"
+date: "1/17/2022"
 output: pdf_document
 ---
 
@@ -26,7 +26,7 @@ library(purrr)
 
 
 
-# YouTube German/English Education Channels Analysis 2024
+# YouTube German Education Channels Analysis 2022
 
 ```{r load-data, echo=F, warning=F}
 
@@ -108,7 +108,7 @@ Videos have been assigned to multiple categories:
 `r table(df$categories)`
 
 
-```{r precalc, eval=F}
+```{r, eval=F}
 length(unique(yt.complete$channelId)) / 47021
 length(unique(yt.complete$videoId)) / 18896413
 min(yt.complete$video_lengt)
@@ -150,15 +150,13 @@ channelsDE %>% summarise(
 
 
 ## Visualizations
-```{r descriptiveVisualization1}
-
+```{r descriptiveVisualization}
 ggplot(yt.complete %>% 
          group_by(channelId) %>% 
          mutate(video_count = n()), 
        aes(x=video_count)) +
 geom_histogram(bins = 30) +
-  theme_minimal() +
-  labs(x="Number of videos per channel")
+  theme_minimal()
 
 
 ggplot(yt.complete %>% 
@@ -166,15 +164,13 @@ ggplot(yt.complete %>%
          mutate(video_count = n(), view_sum = sum(viewCount)), 
        aes(x=video_count, y=view_sum)) +
 geom_point(alpha=0.2, size=0.2) +
-  theme_minimal() +
-  labs(x="Number of Videos", y="Number of views")
+  theme_minimal()
 
 
 ```
 
 
-```{r descriptiveVisualization2}
-
+```{r descriptiveVisualization}
 p1 <- ggplot(yt.complete, aes(x=year)) + 
   geom_histogram(bins = 15) +
   theme_minimal()
@@ -194,7 +190,6 @@ ggsave(
   paste0('output/yt-hist-length','-',ds.name,'.pdf'), 
   p2, width = 6, height = 4, units = "in", dpi=600)
 
-
 p3 <- ggplot(yt.complete %>% filter(viewCount>0), aes(x=video_length/60, y=viewCount/1000)) + 
   geom_point(size=0.4, alpha=0.1) +
   #geom_smooth(method='lm', formula= y~x) +
@@ -207,7 +202,7 @@ ggsave(
 
 
 p4 <- ggplot(yt.complete, aes(x=video_length/60)) + 
-  geom_histogram(bins = 15, aes(y=after_stat(density)), colour="black", fill="white") +
+  geom_histogram(bins = 15, aes(y=..density..), colour="black", fill="white") +
   geom_density(alpha=.2,color="darkblue", fill="lightblue") +
   theme_minimal() +
   labs(x="video length (min)", y='density')
@@ -220,7 +215,9 @@ ggsave(
 ```
 
 
+```{r}
 
+```
 
 
 
@@ -257,7 +254,7 @@ plot(k.values, wss_values,
 
 
 
-```{r silhouette-method }
+```{r}
 # Average silhouette method => 3
 # Error: cannot allocate vector of size 26.6 Gb
 # Distance vector is too large
@@ -282,7 +279,7 @@ plot(k.values, avg_sil_values,
 
 
 **Run the kmeans clusterin**
-```{r kmeans-clustering}
+```{r}
 cl <- kmeans(x, 3, nstart=100, iter.max=1000, algorithm="MacQueen")
 centers=as.data.frame(cl$centers)
 x$cluster<-factor(cl$cluster)
@@ -347,7 +344,7 @@ Cluster centers
 
 
 
-```{r clusterNumbers}
+```{r}
 
 
 # 1. map cluster numbers
@@ -381,7 +378,7 @@ yt.hist.cl
 
 
 
-```{r stats}
+```{r}
 
 c(
 paste("Cluster & Videos & Min & Max & Mean & SD"),
@@ -433,7 +430,7 @@ paste(
 
 
 ## Detect segmented videos by their title
-```{r identify-segments-by-regex}
+```{r}
 
 df.segmentation <- yt.complete %>% dplyr::select(videoTitle, video_length, channelId)
 df.segmentation$cluster<-factor(cl$cluster)
@@ -480,7 +477,7 @@ df.segmentedOnly <- df.segmentation %>% filter(isSegmented==TRUE)
 
 ```
 
-```{r determine-segment-sizes}
+```{r}
 # Determine the size of the segmented videos in each cluster
 c1seg <- df.segmentation %>% filter(
   isSegmented==TRUE,
@@ -511,7 +508,7 @@ length(unique(yt.complete$channelId))
 ```
 
 
-```{r misc}
+```{r}
 # Misc
 cor(yt.complete$video_length, yt.complete$viewCount, method = 'pearson' )
 cor(yt.complete$video_length, yt.complete$viewCount, method = 'spearman' )

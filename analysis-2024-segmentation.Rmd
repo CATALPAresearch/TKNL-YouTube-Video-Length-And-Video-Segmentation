@@ -190,7 +190,7 @@ all
 
 
 
-## learning gain
+## Learning gain
 D1
 `r nrow(as.data.frame(subset(df.complete,variant==1 & type=='D')$learninggain))`
 `r mean(subset(df.complete,variant==1 & type=='D')$learninggain)`
@@ -392,6 +392,49 @@ boxpl.s
 ```
 
 
+## Test statistics
+
+```{r learningain}
+
+data %>% select(variant, learninggain) %>% 
+  group_by(variant) %>%
+  reframe(mean_learninggain = mean(learninggain))
+
+6.625000 - 5.285714	
+
+```
+
+
+### Anova
+```{r, anova}
+
+
+groupmeans <- c(550, 598, 598, 646)
+
+p <- power.anova.test(groups = length(groupmeans), 
+between.var = var(groupmeans), within.var = 6400, 
+power=0.823,sig.level=0.05,n=NULL)
+p
+```
+
+## T-test > not applicable because the populations are not normaly distributed
+```{r}
+# Create two groups based on the number of cylinders (4 or 6)
+variant1 <- df.complete %>% filter(variant == 1) %>% select(learninggain)
+variant2 <- df.complete %>% filter(variant == 2) %>% select(learninggain)
+variant3 <- df.complete %>% filter(variant == 3) %>% select(learninggain)
+variant1
+# Perform the t-test
+t.test(variant1, variant3)
+t.test(variant1, variant2)
+t.test(variant2, variant3)
+
+df.complete
+
+```
+
+
+## Kruskal Wallis Test One Way Anova by Ranks
 ```{r}
 
 # Kruskal Wallis Test One Way Anova by Ranks
@@ -430,9 +473,9 @@ kruskal.test(
 
 
 
-# YouTube Analysis
+# YouTube Analysis (old??)
 ```{r}
-yt <- read.table("/home/abb/Documents/proj_001_doc/pub/68-EuroPLoP-VideoSegmentation/data/Maas-all-channel-videos3.csv", header=T, sep=",",quote='"')
+yt <- read.table("data-europlop/Maas-all-channel-videos3.csv", header=T, sep=",",quote='"')
 
 yt.complete <- subset(yt, excluded=='0')
 library(lubridate)
@@ -580,15 +623,6 @@ yt.histseg
 ```
 
 
-```{r}
-
-
-
-
-
-```
-
-
 
 ```{r}
 
@@ -672,7 +706,7 @@ summary(cl)
 
 yt.histseg <- ggplot(z, aes(x=video_length, fill=cluster)) +
   geom_histogram(bins = 300) +
-  scale_x_continuous(labels=function(x) round(x/60,0), n.breaks=10) +
+  scale_x_brewer(labels=function(x) round(x/60,0), n.breaks=10) +
    theme_minimal() +
   labs(title="", subtitle="", alpha=NULL, color='', x="Video length in minutes", y="Number of videos")
 #ggsave("yt-hist-segmented.pdf",yt.hist,width = 6, height = 4, units = "in", dpi=600)
@@ -693,31 +727,4 @@ ggplot(yt.complete, aes(x=views, y=comments)) +
 ```
 
 
-```{r}
-
-#Anova
-
-groupmeans <- c(550, 598, 598, 646)
-
-p <- power.anova.test(groups = length(groupmeans), 
-between.var = var(groupmeans), within.var = 6400, 
-power=0.823,sig.level=0.05,n=NULL)
-p
-
-
-data(mtcars)
-
-# Create two groups based on the number of cylinders (4 or 6)
-variant1 <- df.complete %>% filter(variant == 1) %>% select(learninggain)
-variant2 <- df.complete %>% filter(variant == 2) %>% select(learninggain)
-variant3 <- df.complete %>% filter(variant == 3) %>% select(learninggain)
-
-# Perform the t-test
-t.test(group1, group2)
-t.test(variant1, variant3)
-t.test(variant1, variant2)
-
-df.complete
-
-```
 
